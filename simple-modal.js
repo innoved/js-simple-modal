@@ -54,6 +54,53 @@ function _readOnlyError(name) { throw new Error("\"" + name + "\" is read-only")
         $(simpleModal + ' .modal-content').html(simpleModalContent);
       });
     };
+
+    this.openModal = function ($element) {
+      storeSimpleModalTemplate();
+      var ajaxUrl = $element.data('url');
+
+      if (ajaxUrl === undefined) {
+        ajaxUrl = $element.attr('href');
+      }
+
+      var dataType = $element.data('type');
+
+      if (dataType === undefined) {
+        dataType = 'json';
+      }
+
+      var videoPlayer = $element.data('video-player'); // Get the contents of the specified page and update the modal content
+
+      $.ajax({
+        url: ajaxUrl,
+        method: 'GET',
+        dataType: dataType
+      }).done(function (response) {
+        if (response.html > '') {
+          $(simpleModal + ' .modal-content').html(response.html);
+          closeModalButton();
+          resizeModal();
+          updateFormElements(version);
+
+          if (videoPlayer !== undefined) {
+            var $modal = $(simpleModal);
+            $modal.find('.modal-footer').remove();
+            $modal.find('.modal-body > .row.margin-top').removeClass('row margin-top');
+            $modal.addClass('kaltura-video-player-modal');
+          }
+        }
+      }).fail(function (response, xhr, textStatus, errorThrown) {
+        showError('GET', response);
+        innovedFlashMessage.create('error', 'Something went wrong', "Please try again");
+        $.error('Request Failed: ' + textStatus);
+        console.log(errorThrown);
+      });
+      $('#simpleModal').modal({
+        'show': true,
+        'backdrop': 'static',
+        'keyboard': true
+      });
+    };
     /**
      * Load the simple modal manually rather than using the automatic bootstrap method
      * * Usage: Add a class of js-simple-modal to any link / button 
@@ -63,46 +110,7 @@ function _readOnlyError(name) { throw new Error("\"" + name + "\" is read-only")
     var manualModal = function manualModal() {
       $('body').on('click', '.js-simple-modal', function (e) {
         e.preventDefault();
-        storeSimpleModalTemplate();
-        var ajaxUrl = $(this).data('url');
-
-        if (ajaxUrl === undefined) {
-          ajaxUrl = $(this).attr('href');
-        }
-
-        var dataType = $(this).data('type');
-
-        if (dataType === undefined) {
-          dataType = 'json';
-        }
-
-        var videoPlayer = $(this).data('video-player'); // Get the contents of the specified page and update the modal content
-
-        emsGlobalActions.getJqXHR(ajaxUrl, 'GET', '', dataType).done(function (response) {
-          if (response.html > '') {
-            $(simpleModal + ' .modal-content').html(response.html);
-            closeModalButton();
-            resizeModal();
-            updateFormElements(version);
-
-            if (videoPlayer !== undefined) {
-              var $modal = $(simpleModal);
-              $modal.find('.modal-footer').remove();
-              $modal.find('.modal-body > .row.margin-top').removeClass('row margin-top');
-              $modal.addClass('kaltura-video-player-modal');
-            }
-          }
-        }).fail(function (response, xhr, textStatus, errorThrown) {
-          showError('GET', response);
-          innovedFlashMessage.create('error', 'Something went wrong', "Please try again");
-          $.error('Request Failed: ' + textStatus);
-          console.log(errorThrown);
-        });
-        $('#simpleModal').modal({
-          'show': true,
-          'backdrop': 'static',
-          'keyboard': true
-        });
+        innovedSimpleModal.openModal($(this));
       });
     };
     /**
@@ -157,7 +165,7 @@ function _readOnlyError(name) { throw new Error("\"" + name + "\" is read-only")
       }
     };
 
-    var showError = function showError() {
+    var showError = function showError(method, response, originalSubmitHtml) {
       var text = method.toUpperCase() == 'GET' ? 'loading' : 'saving';
       $(simpleModal + ' .modal-body .alert.alert-danger').remove();
       $(simpleModal + ' .modal-body').prepend("<div class=\"alert alert-danger\">\n          <p><strong>Ooops!</strong> Something went wrong when ".concat(text, " the page. Please try again.</p>\n        </div>"));

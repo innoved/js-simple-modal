@@ -50,27 +50,25 @@
       });
     };
 
-    /**
-     * Load the simple modal manually rather than using the automatic bootstrap method
-     * * Usage: Add a class of js-simple-modal to any link / button 
-     */
-    const manualModal = function() {
-      $('body').on('click', '.js-simple-modal', function (e) {
-        e.preventDefault();
-        storeSimpleModalTemplate();
+    this.openModal = function($element) {
+      storeSimpleModalTemplate();
 
-        var ajaxUrl = $(this).data('url');
+        var ajaxUrl = $element.data('url');
         if (ajaxUrl === undefined) {
-          ajaxUrl = $(this).attr('href');
+          ajaxUrl = $element.attr('href');
         }
-        var dataType = $(this).data('type');
+        var dataType = $element.data('type');
         if (dataType === undefined) {
           dataType = 'json';
         }
-        var videoPlayer = $(this).data('video-player');
+        var videoPlayer = $element.data('video-player');
 
         // Get the contents of the specified page and update the modal content
-        emsGlobalActions.getJqXHR(ajaxUrl, 'GET', '', dataType).done(function(response) {
+        $.ajax({
+            url: ajaxUrl,
+            method: 'GET',
+            dataType: dataType,
+        }).done(function(response) {
           if (response.html > '') {
             $(simpleModal + ' .modal-content').html(response.html);
             closeModalButton();
@@ -85,14 +83,26 @@
             }
           }
         }).fail(function(response, xhr, textStatus, errorThrown) {
-            showError('GET', response);
-            innovedFlashMessage.create('error', 'Something went wrong', "Please try again");
-            $.error('Request Failed: ' + textStatus);
-            console.log(errorThrown);
+          showError('GET', response);
+          innovedFlashMessage.create('error', 'Something went wrong', "Please try again");
+          $.error('Request Failed: ' + textStatus);
+          console.log(errorThrown);
         });
 
         $('#simpleModal').modal({'show': true, 'backdrop': 'static', 'keyboard': true});
+    };
+
+    /**
+     * Load the simple modal manually rather than using the automatic bootstrap method
+     * * Usage: Add a class of js-simple-modal to any link / button 
+     */
+    const manualModal = function() {
+
+      $('body').on('click', '.js-simple-modal', function (e) {
+          e.preventDefault();
+          innovedSimpleModal.openModal($(this));
       });
+
     };
 
     /**
@@ -147,7 +157,7 @@
       }
     };
 
-    const showError = function() {
+    const showError = function(method, response, originalSubmitHtml) {
       let text = method.toUpperCase() == 'GET' ? 'loading' : 'saving';
       $(simpleModal + ' .modal-body .alert.alert-danger').remove();
 
