@@ -5,11 +5,11 @@ const OptimizeCSSAssetsPlugin = require("optimize-css-assets-webpack-plugin");
 const packageName = 'simple-modal';
 
 module.exports = {
-  mode: "development",
-  entry: "./src/"+packageName+".js",
+  mode: 'development',
+  entry: ["@babel/polyfill", './src/'+packageName+'.js'],
   output: {
     path: path.resolve(__dirname + "/dist"),
-    filename: packageName+".js",
+    filename: packageName+'.js',
     publicPath: "/dist"
   },
   module: {
@@ -17,9 +17,7 @@ module.exports = {
       { 
         test: /\.js$/,
         exclude: /node_modules/,
-        use: {
-          loader: "babel-loader"
-        }
+        use: "babel-loader"
       },
       {
         test: /\.s?css$/,
