@@ -71,11 +71,7 @@ function _readOnlyError(name) { throw new Error("\"" + name + "\" is read-only")
 
       var videoPlayer = $element.data('video-player'); // Get the contents of the specified page and update the modal content
 
-      $.ajax({
-        url: ajaxUrl,
-        method: 'GET',
-        dataType: dataType
-      }).done(function (response) {
+      getJqXHR(ajaxUrl, 'GET', null, dataType).done(function (response) {
         if (response.html > '') {
           $(simpleModal + ' .modal-content').html(response.html);
           closeModalButton();
@@ -125,7 +121,7 @@ function _readOnlyError(name) { throw new Error("\"" + name + "\" is read-only")
         var originalSubmitHtml = $(simpleModal + ' .modal-footer button:submit').html();
         $(simpleModal + ' .modal-footer button:submit').prop('disabled', true);
         $(simpleModal + ' .modal-footer button:submit').html('<i class="fas fa-circle-notch fa-spin" aria-hidden="true"></i> Saving...');
-        emsGlobalActions.getJqXHR($(this).attr('action'), 'POST', $(this).serialize(), 'json').done(function (response) {
+        getJqXHR($(this).attr('action'), 'POST', $(this).serialize(), 'json').done(function (response) {
           if (response.reload !== undefined) {
             $(simpleModal + ' .modal-content').html('');
             window.location.reload();
